@@ -34,7 +34,8 @@ const defaultState = {
 class App extends Component {
   state = storage && storage.version === defaultState.version ? {
     ...storageLoad(),
-    settingsActive: Boolean(location.hash.slice(1)),
+    settingsActive: Boolean(location.hash.slice(1))
+      && storage.url !== location.hash.slice(1),
     week: weekOfYear(),
     html: null,
     url: location.hash.slice(1) || storage.url
