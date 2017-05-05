@@ -75,7 +75,7 @@ class App extends Component {
   handleSettingsSubmit = async e => {
     if (e) e.preventDefault()
     const lists = await fetchLists(this.inputUrl.value)
-    this.setState({ lists })
+    this.setState({ lists, url: this.inputUrl.value })
     this.handleListChange(Object.keys(lists)[0])
   }
 
