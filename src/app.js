@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-// import styled from 'styled-components'
+import remove from 'lodash.remove'
 
 import Toolbar from './components/toolbar'
 import Settings from './components/settings'
@@ -7,24 +7,40 @@ import Icon from './components/icon'
 import Flex from './components/flex'
 import Timetable from './components/timetable'
 import Container from './components/container'
+import WeekNumber from './components/week-number'
+import Favorites from './components/favorites'
+import Margin from './components/margin'
+import Title from './components/title'
 
 import fetchLists from './lib/fetch-lists'
 import timetableFetcher from './lib/timetable-fetcher'
 import weekOfYear from './lib/week-of-year'
 import { load as storageLoad, save as storageSave } from './lib/data-storage'
 
+const storage = storageLoad()
+
+const defaultState = {
+  version: 1,
+  settingsActive: false,
+  url: 'https://intranet.spengergasse.at/stundenplan-data',
+  element: '0',
+  list: '0',
+  lists: {},
+  starred: [],
+  week: weekOfYear(),
+  html: null
+}
+
 class App extends Component {
-  state = storageLoad() ? {
+  state = storage && storage.version === defaultState.version ? {
     ...storageLoad(),
     settingsActive: false,
-    week: weekOfYear()
-  } : {
-    settingsActive: false,
-    url: 'https://intranet.spengergasse.at/stundenplan-data',
-    element: '0',
-    list: '0',
-    lists: {},
-    week: weekOfYear()
+    week: weekOfYear(),
+    html: null
+  } : defaultState
+
+  componentDidMount() {
+    this.setHtml()
   }
 
   setHtml = async () => {
@@ -36,13 +52,14 @@ class App extends Component {
     this.setState({ activeRequest: promise })
   }
 
-  save = () => storageSave(this.state)
-  fetchTimetable = timetableFetcher()
-
-  handleListChange = list => this.setState({ list, element: '0' }, this.save)
+  handleListChange = list => this.setState({
+    list, element: '0'
+  }, this.save)
 
   handleElementChange = async element => {
-    this.setState({ element, html: null }, this.setHtml)
+    this.setState({ element, html: null }, () => {
+      this.setHtml().then(this.save)
+    })
   }
 
   handleSettingsClick = () => this.setState({
@@ -56,34 +73,90 @@ class App extends Component {
     this.handleListChange(Object.keys(lists)[0])
   }
 
+  handleStarClick = () => {
+    if (!Number(this.state.element)) return
+    const starred = this.state.starred
+    const matching = starred.find(this.findMatching)
+    if (matching) {
+      // not functional :(
+      remove(starred, matching)
+      this.setState({ starred })
+    } else {
+      this.setState({ starred: [...this.state.starred, {
+        list: this.state.list,
+        element: this.state.element
+      }] })
+    }
+  }
+
+  handleSelectTimetable = ({ element, list }) => {
+    this.setState({ element, list, html: null }, () => {
+      this.setHtml().then(this.save)
+    })
+  }
+
+  handleChangeWeek = value => {
+    this.setState({ week: value, html: null }, this.setHtml)
+  }
+
+  handleCurrentWeekClick = () => {
+    this.setState({ week: weekOfYear() }, this.setHtml)
+  }
+
+  save = () => storageSave(this.state)
+  fetchTimetable = timetableFetcher()
+
+  findMatching = v => (
+    v.list === this.state.list && v.element === this.state.element
+  )
+
   render() {
     return (
       <div>
         <Toolbar>
-          <div>
-            {this.state.title || 'Untis Viewer'}
-          </div>
+          <Title>Untis Viewer</Title>
           <Flex>
-            <button onClick={this.handleStarClick}>
-              <Icon>star</Icon>
-            </button>
-            <button onClick={this.handleSettingsClick}>
-              <Icon>settings</Icon>
-            </button>
+            <WeekNumber
+              type="number"
+              value={this.state.week}
+              onChange={e => this.handleChangeWeek(e.target.valueAsNumber)}
+            />
+            <Favorites
+              value="Favorites"
+              onChange={e => this.handleSelectTimetable(
+                e.target.selectedOptions[0].dataset
+              )}
+            >
+              {[
+                <option disabled key="favorites">Favorites</option>,
+                ...this.state.starred.map(v => (
+                  <option
+                    key={`${v.list[0]}${v.element}`}
+                    data-list={v.list}
+                    data-element={v.element}
+                  >{this.state.lists[v.list][v.element].name}</option>
+                ))
+              ]}
+            </Favorites>
+            <Icon onClick={this.handleCurrentWeekClick}>today</Icon>
+            <Icon onClick={this.handleStarClick}>star</Icon>
+            <Icon onClick={this.handleSettingsClick}>settings</Icon>
           </Flex>
         </Toolbar>
         <form onSubmit={this.handleSettingsSubmit}>
           <Settings active={this.state.settingsActive}>
             <Flex>
-              <select
+              <Margin right><select
+                name="lists"
                 onChange={e => this.handleListChange(e.target.value)}
                 value={this.state.list}
               >
                 {Object.keys(this.state.lists).map(name => (
                   <option value={name} key={name}>{name}</option>
                 ))}
-              </select>
-              <select
+              </select></Margin>
+              <Margin right><select
+                name="elements"
                 onChange={e => this.handleElementChange(e.target.value)}
                 value={this.state.element}
               >
@@ -91,7 +164,7 @@ class App extends Component {
                 this.state.lists[this.state.list].map(item => (
                   <option value={item.key} key={item.key}>{item.name}</option>
                 ))}
-              </select>
+              </select></Margin>
             </Flex>
             <label htmlFor="url">URL</label>
             <input
@@ -103,7 +176,7 @@ class App extends Component {
           </Settings>
         </form>
         {Number(this.state.element)
-          ? <Timetable {...this.state} />
+          ? <Timetable html={this.state.html} />
           : <Container><p>Choose a timetable</p></Container>}
       </div>
     )

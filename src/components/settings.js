@@ -6,7 +6,7 @@ const Settings = styled.div`
   ${container}
   display: ${({ active }) => (active ? 'flex' : 'none')};
   flex-direction: column;
-  background: #ddd;
+  background: #eee;
   padding: 1rem;
 
   & > * {

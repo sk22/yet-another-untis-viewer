@@ -1,4 +1,5 @@
 import padStart from 'lodash.padstart'
+import pimpCode from './pimp-code'
 
 const getUrl = ({ url, element, week, list }) => (
   `https://cors.now.sh/${url}/${padStart(week, 2, '0')}/` +
@@ -7,17 +8,20 @@ const getUrl = ({ url, element, week, list }) => (
 
 export default () => {
   let request
-  return async ({ url, element, ...rest }) => {
+  return async ({ url, element, week, list }) => {
     if (!Number(element)) return null
-    request = fetch(getUrl({ url, element, ...rest }))
+    request = fetch(getUrl({ url, element, week, list }), { cache: 'no-cache' })
     const currentRequest = request
-    const res = await currentRequest
-    if (currentRequest !== request) {
-      console.warn('Requests do not match')
-      return null
+    try {
+      const res = await currentRequest
+      if (currentRequest !== request) return null
+      const buffer = await res.arrayBuffer()
+      const decoder = new TextDecoder('iso-8859-1')
+      return pimpCode(decoder.decode(buffer))
+    } catch (err) {
+      if (currentRequest !== request) return null
+      console.error(err)
+      return 'Could not fetch the requested timetable.'
     }
-    const buffer = await res.arrayBuffer()
-    const decoder = new TextDecoder('iso-8859-1')
-    return decoder.decode(buffer)
   }
 }

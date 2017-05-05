@@ -3,17 +3,17 @@ import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import Loading from '../components/loading'
 
-const LimitWidth = styled.div`
-  max-width: 100%;
+const TimetableView = styled.div`
   overflow-x: scroll;
+  padding: 1rem;
 `
 
 const Timetable = ({ html: __html }) => (
-  <LimitWidth>
+  <TimetableView>
     {__html
       ? <div dangerouslySetInnerHTML={({ __html })} />
       : <Loading />}
-  </LimitWidth>
+  </TimetableView>
 )
 
 Timetable.propTypes = {
