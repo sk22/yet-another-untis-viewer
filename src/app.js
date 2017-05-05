@@ -41,7 +41,11 @@ class App extends Component {
   } : defaultState
 
   componentDidMount() {
-    this.setHtml()
+    if (Number(this.state.element)) {
+      this.setHtml()
+    } else if (this.state.url) {
+      this.handleSettingsSubmit()
+    }
   }
 
   setHtml = async () => {
@@ -68,7 +72,7 @@ class App extends Component {
   })
 
   handleSettingsSubmit = async e => {
-    e.preventDefault()
+    if (e) e.preventDefault()
     const lists = await fetchLists(this.inputUrl.value)
     this.setState({ lists })
     this.handleListChange(Object.keys(lists)[0])
@@ -77,7 +81,7 @@ class App extends Component {
   handleStarClick = () => {
     if (!Number(this.state.element)) return
     const starred = this.state.starred
-    const matching = starred.find(this.findMatching)
+    const matching = starred.find(this.matchesCurrent)
     if (matching) {
       // not functional :(
       remove(starred, matching)
@@ -107,7 +111,7 @@ class App extends Component {
   save = () => storageSave(this.state)
   fetchTimetable = timetableFetcher()
 
-  findMatching = v => (
+  matchesCurrent = v => (
     v.list === this.state.list && v.element === this.state.element
   )
 
@@ -140,7 +144,10 @@ class App extends Component {
               ]}
             </Favorites>
             <Icon onClick={this.handleCurrentWeekClick}>today</Icon>
-            <Icon onClick={this.handleStarClick}>star</Icon>
+            <Icon onClick={this.handleStarClick}>
+              {this.state.starred.find(this.matchesCurrent)
+                ? 'star' : 'star_border'}
+            </Icon>
             <Icon onClick={this.handleSettingsClick}>settings</Icon>
           </Flex>
         </Toolbar>
