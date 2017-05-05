@@ -21,8 +21,8 @@ const storage = storageLoad()
 
 const defaultState = {
   version: 1,
-  settingsActive: false,
-  url: 'https://intranet.spengergasse.at/stundenplan-data',
+  settingsActive: true,
+  url: '',
   element: '0',
   list: '0',
   lists: {},

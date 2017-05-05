@@ -19,7 +19,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "rename": "node -e \"const fs = require('fs'); fs.createReadStream('./build/index.html').pipe(fs.createWriteStream('./build/200.html'))\"",
+    "deploy": "yarn build && yarn rename && surge ./build --domain https://yauntis.surge.sh"
   },
   "eslintConfig": {
     "extends": "sk22",
