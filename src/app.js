@@ -22,7 +22,7 @@ const storage = storageLoad()
 const defaultState = {
   version: 1,
   settingsActive: true,
-  url: '',
+  url: location.hash.slice(1) || '',
   element: '0',
   list: '0',
   lists: {},
@@ -34,9 +34,10 @@ const defaultState = {
 class App extends Component {
   state = storage && storage.version === defaultState.version ? {
     ...storageLoad(),
-    settingsActive: false,
+    settingsActive: Boolean(location.hash.slice(1)),
     week: weekOfYear(),
-    html: null
+    html: null,
+    url: location.hash.slice(1) || storage.url
   } : defaultState
 
   componentDidMount() {
