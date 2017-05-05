@@ -1,5 +1,6 @@
 {
   "name": "Yet Another Untis Viewer",
+  "short_name": "Untis",
   "icons": [
     {
       "src": "/icon192.png",
