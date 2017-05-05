@@ -21,6 +21,7 @@ const getListsFromNavbarHtml = html => {
 }
 
 export default async url => {
+  if (!url) return null
   console.log(`https://cors.now.sh/${url}/frames/navbar.htm`)
   const res = await fetch(`https://cors.now.sh/${url}/frames/navbar.htm`)
   const navbar = await res.text()

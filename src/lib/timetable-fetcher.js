@@ -10,6 +10,7 @@ export default () => {
   let request
   return async ({ url, element, week, list }) => {
     if (!Number(element)) return null
+    if (!url) return 'No URL given'
     request = fetch(getUrl({ url, element, week, list }), { cache: 'no-cache' })
     const currentRequest = request
     try {
