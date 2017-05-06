@@ -5,13 +5,14 @@ import { margin } from './margin'
 
 const Button = styled.button`
   ${margin({ left: true })}
+  display: flex;
   box-sizing: content-box;
+  align-items: center;
+  justify-content: center;
   border-radius: 100%;
   transition: background-color 0.3s cubic-bezier(.25,.8,.25,1);
   border: 0;
-  padding: .5rem;
-  height: 24px;
-  width: 24px;
+  padding: ${({ small }) => (small ? '.2rem' : '.4rem')};
   background: none;
 
   &:hover {

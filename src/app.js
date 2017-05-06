@@ -11,6 +11,9 @@ import WeekNumber from './components/week-number'
 import Favorites from './components/favorites'
 import Margin from './components/margin'
 import Title from './components/title'
+import BoxedInput from './components/boxed-input'
+import Select from './components/select'
+import Button from './components/button'
 
 import fetchLists from './lib/fetch-lists'
 import timetableFetcher from './lib/timetable-fetcher'
@@ -45,7 +48,7 @@ class App extends Component {
     if (Number(this.state.element)) {
       this.setHtml()
     } else if (this.state.url) {
-      this.handleSettingsSubmit()
+      this.handleUpdateClick()
     }
   }
 
@@ -72,9 +75,9 @@ class App extends Component {
     settingsActive: !this.state.settingsActive
   })
 
-  handleSettingsSubmit = async e => {
+  handleUpdateClick = async e => {
     if (e) e.preventDefault()
-    const lists = await fetchLists(this.inputUrl.value)
+    const lists = await fetchLists(this.inputUrl.value) || []
     this.setState({ lists, url: this.inputUrl.value })
     this.handleListChange(Object.keys(lists)[0])
   }
@@ -109,6 +112,10 @@ class App extends Component {
     this.setState({ week: weekOfYear() }, this.setHtml)
   }
 
+  handleWeekDelta = delta => this.setState({
+    week: this.state.week + delta
+  }, this.setHtml)
+
   save = () => storageSave(this.state)
   fetchTimetable = timetableFetcher()
 
@@ -120,22 +127,17 @@ class App extends Component {
     return (
       <div>
         <Toolbar>
-          <Title>Untis Viewer</Title>
+          <Title>Untis</Title>
           <Flex>
-            <WeekNumber
-              type="number"
-              value={this.state.week}
-              onChange={e => this.handleChangeWeek(e.target.valueAsNumber)}
-            />
             <Favorites
-              value="Favorites"
+              value="Favs"
               onChange={e => this.handleSelectTimetable(
                 e.target.selectedOptions[0].dataset
               )}
             >
               {[
-                <option disabled key="favorites">Favorites</option>,
-                ...this.state.starred.map(v => (
+                <option disabled key="favorites">Favs</option>,
+                ...this.state.starred.map(v => this.state.lists[v.list] && (
                   <option
                     key={`${v.list[0]}${v.element}`}
                     data-list={v.list}
@@ -144,18 +146,27 @@ class App extends Component {
                 ))
               ]}
             </Favorites>
-            <Icon onClick={this.handleCurrentWeekClick}>today</Icon>
-            <Icon onClick={this.handleStarClick}>
-              {this.state.starred.find(this.matchesCurrent)
-                ? 'star' : 'star_border'}
+            <Icon small onClick={() => this.handleWeekDelta(-1)}>
+              navigate_before
             </Icon>
-            <Icon onClick={this.handleSettingsClick}>settings</Icon>
+            <WeekNumber
+              type="number"
+              value={this.state.week}
+              onChange={e => this.handleChangeWeek(e.target.valueAsNumber)}
+            />
+            <Icon small onClick={() => this.handleWeekDelta(1)}>
+              navigate_next
+            </Icon>
+            <Icon onClick={this.handleCurrentWeekClick}>today</Icon>
+            <Icon onClick={this.handleSettingsClick}>
+              {this.state.settingsActive ? 'close' : 'settings'}
+            </Icon>
           </Flex>
         </Toolbar>
-        <form onSubmit={this.handleSettingsSubmit}>
+        <form onSubmit={this.handleUpdateClick}>
           <Settings active={this.state.settingsActive}>
             <Flex>
-              <Margin right><select
+              <Margin right><Select
                 name="lists"
                 onChange={e => this.handleListChange(e.target.value)}
                 value={this.state.list}
@@ -163,8 +174,8 @@ class App extends Component {
                 {Object.keys(this.state.lists).map(name => (
                   <option value={name} key={name}>{name}</option>
                 ))}
-              </select></Margin>
-              <Margin right><select
+              </Select></Margin>
+              <Margin right><Select
                 name="elements"
                 onChange={e => this.handleElementChange(e.target.value)}
                 value={this.state.element}
@@ -173,15 +184,20 @@ class App extends Component {
                 this.state.lists[this.state.list].map(item => (
                   <option value={item.key} key={item.key}>{item.name}</option>
                 ))}
-              </select></Margin>
+              </Select></Margin>
+              <Icon onClick={this.handleStarClick}>
+                {this.state.starred.find(this.matchesCurrent)
+                  ? 'star' : 'star_border'}
+              </Icon>
             </Flex>
             <label htmlFor="url">URL</label>
-            <input
+            <BoxedInput
+              id="url"
               type="url"
               defaultValue={this.state.url}
-              ref={ref => { this.inputUrl = ref }}
+              innerRef={ref => { this.inputUrl = ref }}
             />
-            <button type="submit">Update</button>
+            <Button type="submit">Update</Button>
           </Settings>
         </form>
         {Number(this.state.element)
