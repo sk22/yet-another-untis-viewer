@@ -113,7 +113,8 @@ class App extends Component {
   }
 
   handleWeekDelta = delta => this.setState({
-    week: this.state.week + delta
+    week: this.state.week + delta,
+    html: null
   }, this.setHtml)
 
   save = () => storageSave(this.state)
